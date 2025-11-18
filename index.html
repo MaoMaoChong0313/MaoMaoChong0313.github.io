@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Three.js 範例 — 旋轉立方體 + OrbitControls</title>
+
+  <style>
+    /* 全螢幕畫布 */
+    html,body {
+      height: 100%;
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans CJK TC", "Helvetica Neue", Arial;
+      background: #111;
+      color: #eee;
+    }
+    #app {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+    /* 小功能面板 */
+    .panel {
+      position: absolute;
+      left: 12px;
+      top: 12px;
+      background: rgba(0,0,0,0.5);
+      padding: 8px 10px;
+      border-radius: 8px;
+      backdrop-filter: blur(4px);
+      font-size: 13px;
+    }
+    .panel label { display:inline-flex; gap:6px; align-items:center; }
+    canvas { display:block; } /* 去除 inline 間距 */
+  </style>
+
+  <!-- Import map：把模組化路徑對應到 CDN -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.154.0/build/three.module.js",
+      "three/examples/": "https://unpkg.com/three@0.154.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="app">
+    <div class="panel">
+      <label>
+        <input id="wireframe" type="checkbox" />
+        wireframe
+      </label>
+      &nbsp;|&nbsp;
+      <button id="randomColor">隨機色</button>
+    </div>
+    <!-- Three.js 自動在畫面中建立 canvas（也可自行建立） -->
+  </div>
+
+  <!-- 主程式：ES6 module -->
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/examples/controls/OrbitControls.js';
+
+    // 基本場景、相機、渲染器
+    const container = document.getElementById('app');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b0b0b);
+
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(2.5, 2, 3);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    container.appendChild(renderer.domElement);
+
+    // 燈光
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 0.7);
+    hemi.position.set(0, 2, 0);
+    scene.add(hemi);
+
+    const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+    dir.position.set(5, 5, 2);
+    scene.add(dir);
+
+    // 物件：立方體 + 底座
+    const cubeGeo = new THREE.BoxGeometry(1, 1, 1);
+    let cubeMat = new THREE.MeshStandardMaterial({ color: 0x0099ff, roughness: 0.4, metalness: 0.1 });
+    const cube = new THREE.Mesh(cubeGeo, cubeMat);
+    cube.position.y = 0.6;
+    scene.add(cube);
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(10, 10),
+      new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 1, metalness: 0 })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = 0;
+    scene.add(ground);
+
+    // 控制器
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+
+    // 自適應尺寸
+    window.addEventListener('resize', onResize);
+    function onResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    // UI 綁定
+    const wireCheckbox = document.getElementById('wireframe');
+    wireCheckbox.addEventListener('change', (e) => {
+      cube.material.wireframe = e.target.checked;
+    });
+
+    document.getElementById('randomColor').addEventListener('click', () => {
+      const c = new THREE.Color(Math.random(), Math.random(), Math.random());
+      cube.material.color.set(c);
+    });
+
+    // 動畫迴圈
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const t = clock.getElapsedTime();
+      // 旋轉 + 輕微上下動作
+      cube.rotation.x = t * 0.6;
+      cube.rotation.y = t * 0.9;
+      cube.position.y = 0.6 + Math.sin(t * 2) * 0.08;
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // 簡單錯誤/支援檢查（若瀏覽器不支援）
+    if (!renderer) {
+      container.innerHTML = "<p>抱歉：您的瀏覽器可能不支援 WebGL。</p>";
+    }
+  </script>
+</body>
+</html>
