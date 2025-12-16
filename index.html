@@ -1,148 +1,150 @@
-<!doctype html>
-<html lang="zh-Hant">
+<!DOCTYPE html>
+<html lang="zh-TW">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Three.js 範例 — 旋轉立方體 + OrbitControls</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>廖子瑋 | FPS Gamer Profile</title>
+    <style>
+        :root {
+            --ndhu-gold: #c5a059;   /* 模擬校徽質感金 */
+            --cs-orange: #f39c12;   /* CS2 風格橘 */
+            --pubg-yellow: #f1c40f; /* PUBG 經典黃 */
+            --bg-dark: #0f172a;     /* 深邃藍黑背景 */
+            --card-glass: rgba(30, 41, 59, 0.8);
+        }
 
-  <style>
-    /* 全螢幕畫布 */
-    html,body {
-      height: 100%;
-      margin: 0;
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans CJK TC", "Helvetica Neue", Arial;
-      background: #111;
-      color: #eee;
-    }
-    #app {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      overflow: hidden;
-    }
-    /* 小功能面板 */
-    .panel {
-      position: absolute;
-      left: 12px;
-      top: 12px;
-      background: rgba(0,0,0,0.5);
-      padding: 8px 10px;
-      border-radius: 8px;
-      backdrop-filter: blur(4px);
-      font-size: 13px;
-    }
-    .panel label { display:inline-flex; gap:6px; align-items:center; }
-    canvas { display:block; } /* 去除 inline 間距 */
-  </style>
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            color: #f8fafc;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
 
-  <!-- Import map：把模組化路徑對應到 CDN -->
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://unpkg.com/three@0.154.0/build/three.module.js",
-      "three/examples/": "https://unpkg.com/three@0.154.0/examples/jsm/"
-    }
-  }
-  </script>
+        .profile-card {
+            background: var(--card-glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 30px;
+            width: 380px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        /* 呼吸燈邊框效果 */
+        .profile-card::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 32px;
+            background: linear-gradient(45deg, var(--cs-orange), var(--pubg-yellow), var(--ndhu-gold));
+            z-index: -1;
+            filter: blur(8px);
+            opacity: 0.4;
+            animation: breathe 5s infinite alternate;
+        }
+
+        @keyframes breathe {
+            from { opacity: 0.3; }
+            to { opacity: 0.6; }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+            letter-spacing: 4px;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .school {
+            color: var(--ndhu-gold);
+            font-weight: 600;
+            margin-bottom: 25px;
+            display: block;
+        }
+
+        .section-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: #64748b;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 15px;
+        }
+
+        .game-tags {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .game-badge {
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: 0.3s;
+            cursor: default;
+        }
+
+        .cs2 {
+            background: rgba(243, 156, 18, 0.1);
+            border: 1px solid var(--cs-orange);
+            color: var(--cs-orange);
+        }
+
+        .pubg {
+            background: rgba(241, 196, 15, 0.1);
+            border: 1px solid var(--pubg-yellow);
+            color: var(--pubg-yellow);
+        }
+
+        .game-badge:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px currentColor;
+        }
+
+        .desc {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #cbd5e1;
+            margin: 20px 0;
+        }
+    </style>
 </head>
 <body>
-  <div id="app">
-    <div class="panel">
-      <label>
-        <input id="wireframe" type="checkbox" />
-        wireframe
-      </label>
-      &nbsp;|&nbsp;
-      <button id="randomColor">隨機色</button>
+
+<div class="profile-card">
+    <h1>廖子瑋</h1>
+    <span class="school">國立東華大學</span>
+    
+    <div class="desc">
+        目前專注於課業與競技遊戲的平衡。<br>
+        在虛擬戰場上，我是追求極致準確與冷靜決策的射擊玩家。
     </div>
-    <!-- Three.js 自動在畫面中建立 canvas（也可自行建立） -->
-  </div>
 
-  <!-- 主程式：ES6 module -->
-  <script type="module">
-    import * as THREE from 'three';
-    import { OrbitControls } from 'three/examples/controls/OrbitControls.js';
+    <div class="section-title">Main Games</div>
+    <div class="game-tags">
+        <div class="game-badge cs2">Counter-Strike 2</div>
+        <div class="game-badge pubg">PUBG</div>
+    </div>
 
-    // 基本場景、相機、渲染器
-    const container = document.getElementById('app');
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0b0b0b);
+    <div class="section-title" style="margin-top: 30px;">Hobby</div>
+    <div style="color: #94a3b8; font-size: 0.9rem;">
+        FPS Strategy / Teamwork / Competitive
+    </div>
+</div>
 
-    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(2.5, 2, 3);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    container.appendChild(renderer.domElement);
-
-    // 燈光
-    const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 0.7);
-    hemi.position.set(0, 2, 0);
-    scene.add(hemi);
-
-    const dir = new THREE.DirectionalLight(0xffffff, 0.8);
-    dir.position.set(5, 5, 2);
-    scene.add(dir);
-
-    // 物件：立方體 + 底座
-    const cubeGeo = new THREE.BoxGeometry(1, 1, 1);
-    let cubeMat = new THREE.MeshStandardMaterial({ color: 0x0099ff, roughness: 0.4, metalness: 0.1 });
-    const cube = new THREE.Mesh(cubeGeo, cubeMat);
-    cube.position.y = 0.6;
-    scene.add(cube);
-
-    const ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(10, 10),
-      new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 1, metalness: 0 })
-    );
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.y = 0;
-    scene.add(ground);
-
-    // 控制器
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-
-    // 自適應尺寸
-    window.addEventListener('resize', onResize);
-    function onResize() {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-
-    // UI 綁定
-    const wireCheckbox = document.getElementById('wireframe');
-    wireCheckbox.addEventListener('change', (e) => {
-      cube.material.wireframe = e.target.checked;
-    });
-
-    document.getElementById('randomColor').addEventListener('click', () => {
-      const c = new THREE.Color(Math.random(), Math.random(), Math.random());
-      cube.material.color.set(c);
-    });
-
-    // 動畫迴圈
-    const clock = new THREE.Clock();
-    function animate() {
-      requestAnimationFrame(animate);
-
-      const t = clock.getElapsedTime();
-      // 旋轉 + 輕微上下動作
-      cube.rotation.x = t * 0.6;
-      cube.rotation.y = t * 0.9;
-      cube.position.y = 0.6 + Math.sin(t * 2) * 0.08;
-
-      controls.update();
-      renderer.render(scene, camera);
-    }
-    animate();
-
-    // 簡單錯誤/支援檢查（若瀏覽器不支援）
-    if (!renderer) {
-      container.innerHTML = "<p>抱歉：您的瀏覽器可能不支援 WebGL。</p>";
-    }
-  </script>
 </body>
 </html>
+
